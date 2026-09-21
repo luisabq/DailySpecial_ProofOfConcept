@@ -18,6 +18,18 @@ public class RecipeData : ScriptableObject
         return string.IsNullOrWhiteSpace(recipeInstructions) ? "No instructions added yet." : recipeInstructions;
     }
 
+    [Header("Receipt / investigation - prototype story text")]
+    [Tooltip("Product name printed on receipts. Blank uses Recipe Name.")]
+    [SerializeField] private string receiptProductName;
+    [TextArea(2, 5)][SerializeField] private string managementExplanation;
+    [TextArea(2, 5)][SerializeField] private string supplyRecord;
+    [TextArea(2, 5)][SerializeField] private string authorization;
+
+    public string ReceiptProductName => string.IsNullOrWhiteSpace(receiptProductName) ? recipeName : receiptProductName;
+    public string ManagementExplanation => managementExplanation;
+    public string SupplyRecord => supplyRecord;
+    public string Authorization => authorization;
+
     public string RecipeName => recipeName;
     public RecipeMiniGame MiniGamePrefab => miniGamePrefab;
 

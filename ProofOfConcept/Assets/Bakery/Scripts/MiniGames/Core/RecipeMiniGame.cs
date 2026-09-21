@@ -41,11 +41,11 @@ public abstract class RecipeMiniGame : MonoBehaviour
     protected abstract void OnBegin(RecipeData recipe);
 
     // Duplicate clicks and timeout callbacks cannot submit the same attempt twice.
-    protected void Complete(bool succeeded, string outcome)
+    protected void Complete(bool succeeded, string outcome, bool producedFood = false, string[] ingredientsUsed = null)
     {
         if (!IsRunning) return;
         IsRunning = false;
-        Completed?.Invoke(new MiniGameResult(Recipe, succeeded, outcome));
+        Completed?.Invoke(new MiniGameResult(Recipe, succeeded, outcome, producedFood, ingredientsUsed));
     }
 
     // Cancellation never reports success or failure to the customer system.

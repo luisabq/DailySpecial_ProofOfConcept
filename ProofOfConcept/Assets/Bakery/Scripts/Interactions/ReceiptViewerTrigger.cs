@@ -1,37 +1,35 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Re-enter the box to reopen after closing. OnTriggerStay deliberately does not reopen it.
 [RequireComponent(typeof(BoxCollider))]
-public class OvenTrigger : MonoBehaviour
+public class ReceiptViewerTrigger : MonoBehaviour
 {
-    [SerializeField] private RecipeMiniGameController miniGameController;
+    [SerializeField] private ReceiptViewer receiptViewer;
     private readonly HashSet<Collider> contacts = new HashSet<Collider>();
     private bool opened;
 
     private void Reset() { GetComponent<BoxCollider>().isTrigger = true; }
     private void OnTriggerEnter(Collider other)
     {
-        if (miniGameController == null) return;
+        if (receiptViewer == null) return;
         var player = other.GetComponentInParent<FirstPersonPlayerController>();
-        if (player == null || player != miniGameController.Player) return;
+        if (player == null || player != receiptViewer.Player) return;
         if (!contacts.Add(other) || contacts.Count != 1) return;
-        opened = miniGameController.OpenRecipeSelection();
+        opened = receiptViewer.Open();
     }
     private void OnTriggerExit(Collider other)
     {
         if (!contacts.Remove(other) || contacts.Count != 0) return;
-        CloseOwnedAttempt();
+        CloseViewer();
     }
-    private void CloseOwnedAttempt()
+    private void CloseViewer()
     {
-        if (opened && miniGameController != null)
-            miniGameController.CloseMiniGame();
+        if (opened && receiptViewer != null) receiptViewer.Close();
         opened = false;
     }
     private void OnDisable()
     {
-        CloseOwnedAttempt();
+        CloseViewer();
         contacts.Clear();
     }
 }

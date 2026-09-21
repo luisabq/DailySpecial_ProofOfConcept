@@ -194,7 +194,7 @@ public class BakingMiniGame : RecipeMiniGame
         }
         RefreshButtons();
         // Last operation: listeners may close this UI or start another recipe.
-        Complete(succeeded, outcome);
+        Complete(succeeded, outcome, true, ingredients);
     }
 
     protected override void OnCancelled()

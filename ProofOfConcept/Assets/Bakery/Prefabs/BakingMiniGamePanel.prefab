@@ -1724,6 +1724,10 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 4c0aa7f49727bbe43925f8cfedbc4267, type: 3}
   - ingredientName: Eggs
     sprite: {fileID: 21300000, guid: e6a6484caaec3e64e993a44f859c3be7, type: 3}
+  - ingredientName: Fish Eggs
+    sprite: {fileID: 21300000, guid: 96daa8b40ab509d48a54b47ce21408cd, type: 3}
+  - ingredientName: Sawdust
+    sprite: {fileID: 21300000, guid: 288ea57c8ab698f49a9618d846722c96, type: 3}
 --- !u!1 &6307485476920284996
 GameObject:
   m_ObjectHideFlags: 0

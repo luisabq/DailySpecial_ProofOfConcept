@@ -10,21 +10,22 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 80acf416604e51147a8aa5eb3ad96b30, type: 3}
-  m_Name: BreadRecipe
+  m_Name: AlternateBread
   m_EditorClassIdentifier: Assembly-CSharp::BakingRecipeData
-  recipeName: Bread
+  recipeName: Weird Bread
   miniGamePrefab: {fileID: 7567898759420168451, guid: 87408626b7731b747bd8658993b30b2f, type: 3}
-  recipeInstructions: Instructions
+  recipeInstructions: 
   receiptProductName: 
-  managementExplanation: Use our usual bread recipe. The regular supplies arrived
-    this morning.
-  supplyRecord: Water, flour, and eggs received this morning under the regular supply
-    order.
-  authorization: Routine weekly restock approved by Management.
+  managementExplanation: We started using these replacement ingredients today because
+    our usual supplies did not arrive.
+  supplyRecord: "Fish eggs and sawdust received three days ago. \nDelivery type:
+    scheduled recurring supply"
+  authorization: Recurring replacement-ingredient order approved by Management seven
+    days ago.
   ingredients:
   - Water
-  - Flour
-  - Eggs
+  - Sawdust
+  - Fish Eggs
   mixingDuration: 3
   bakeDuration: 8
   perfectStart: 0.55
