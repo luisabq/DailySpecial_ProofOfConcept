@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Opens only when StartRecipe is called (for example by OvenTrigger).
+// OvenTrigger opens the recipe picker; StartRecipe launches the chosen mini-game.
 // Shared UI/cursor ownership belongs here, not in a particular mini-game.
 public class RecipeMiniGameController : MonoBehaviour
 {
@@ -14,12 +16,20 @@ public class RecipeMiniGameController : MonoBehaviour
     [SerializeField] private Button retryButton;
     [SerializeField] private Button closeButton;
 
+    [Header("Prototype Recipe Picker")]
+    [SerializeField] private RecipeData[] availableRecipes;
+    [SerializeField] private TMP_Dropdown recipeDropdown;
+    [SerializeField] private Button selectRecipeButton;
+    [SerializeField] private TMP_Text managementMessage;
+    private readonly List<RecipeData> choices = new List<RecipeData>();
+    private bool uiIsOpen;
+
     public event Action<MiniGameResult> MiniGameCompleted;
     public RecipeData CurrentRecipe { get; private set; }
     public RecipeMiniGame ActiveMiniGame { get; private set; }
     public MiniGameResult LastResult { get; private set; }
     public FirstPersonPlayerController Player => player;
-    public bool IsOpen => ActiveMiniGame != null;
+    public bool IsOpen => uiIsOpen;
 
     private void Awake()
     {
@@ -28,6 +38,8 @@ public class RecipeMiniGameController : MonoBehaviour
 
     private void OnEnable()
     {
+        if (selectRecipeButton != null) selectRecipeButton.onClick.AddListener(StartSelectedRecipe);
+        if (recipeDropdown != null) recipeDropdown.onValueChanged.AddListener(PreviewSelection);
         if (retryButton != null) retryButton.onClick.AddListener(RetryCurrentRecipe);
         if (closeButton != null) closeButton.onClick.AddListener(CloseMiniGame);
     }
@@ -35,6 +47,54 @@ public class RecipeMiniGameController : MonoBehaviour
     private void Update()
     {
         if (IsOpen && FirstPersonPlayerController.EscapePressed()) CloseMiniGame();
+    }
+
+    // Entering the oven opens a menu, not a preset recipe.
+    public bool OpenRecipeSelection()
+    {
+        if (!isActiveAndEnabled || player == null || !player.isActiveAndEnabled || uiPanel == null ||
+            miniGameRoot == null || closeButton == null || recipeDropdown == null ||
+            selectRecipeButton == null || managementMessage == null)
+            return ReportError("Assign all scene UI and recipe picker references.");
+        if (transform.IsChildOf(uiPanel.transform) || !miniGameRoot.IsChildOf(uiPanel.transform))
+            return ReportError("Keep the manager outside UI Panel and Mini Game Root inside it.");
+        if (player.IsUIOpen && !IsOpen) return false;
+        choices.Clear();
+        var labels = new List<string>();
+        if (availableRecipes != null)
+            foreach (RecipeData recipe in availableRecipes)
+                if (recipe != null && !choices.Contains(recipe))
+                { choices.Add(recipe); labels.Add(recipe.RecipeName); }
+        if (choices.Count == 0) return ReportError("Add recipes to Available Recipes.");
+        recipeDropdown.ClearOptions();
+        recipeDropdown.AddOptions(labels);
+        recipeDropdown.SetValueWithoutNotify(0);
+        uiIsOpen = true;
+        uiPanel.SetActive(true);
+        if (!uiPanel.activeInHierarchy)
+        {
+            CloseMiniGame();
+            return ReportError("Enable the Canvas/parents containing OvenUI.");
+        }
+        player.AcquireUI(this);
+        if (retryButton != null) retryButton.interactable = LastResult != null;
+        PreviewSelection(0);
+        return true;
+    }
+
+    private void PreviewSelection(int index)
+    {
+        if (index < 0 || index >= choices.Count || managementMessage == null) return;
+        managementMessage.text = "Selected recipe: " + choices[index].RecipeName +
+            "\nManagement: " + choices[index].ManagementExplanation +
+            "\nStart / Switch Recipe begins a fresh attempt.";
+    }
+
+    public void StartSelectedRecipe()
+    {
+        if (!IsOpen || recipeDropdown == null) return;
+        int index = recipeDropdown.value;
+        if (index >= 0 && index < choices.Count) StartRecipe(choices[index]);
     }
 
     public bool StartRecipe(RecipeData recipe)
@@ -45,7 +105,7 @@ public class RecipeMiniGameController : MonoBehaviour
         if (transform.IsChildOf(uiPanel.transform) || !miniGameRoot.IsChildOf(uiPanel.transform))
             return ReportError("Keep the manager outside UI Panel and Mini Game Root inside it.");
         if (player.IsUIOpen && !IsOpen) return false;
-        if (recipe == null) return ReportError("Assign a recipe on the oven trigger.");
+        if (recipe == null) return ReportError("Choose a recipe to start.");
         if (!recipe.TryValidate(out string error)) return ReportError(error);
         RecipeMiniGame prefab = recipe.MiniGamePrefab;
         if (prefab.gameObject.scene.IsValid() || prefab.transform.parent != null ||
@@ -56,6 +116,13 @@ public class RecipeMiniGameController : MonoBehaviour
         // A retry replaces the attempt without briefly handing movement back to the player.
         DestroyAttempt();
         CurrentRecipe = recipe;
+        uiIsOpen = true;
+        int selectedIndex = choices.IndexOf(recipe);
+        if (recipeDropdown != null && selectedIndex >= 0)
+        {
+            recipeDropdown.SetValueWithoutNotify(selectedIndex);
+            PreviewSelection(selectedIndex);
+        }
         uiPanel.SetActive(true);
         if (!miniGameRoot.gameObject.activeInHierarchy)
         {
@@ -103,6 +170,8 @@ public class RecipeMiniGameController : MonoBehaviour
     {
         DestroyAttempt();
         CurrentRecipe = null;
+        uiIsOpen = false;
+        if (recipeDropdown != null && recipeDropdown.isActiveAndEnabled) recipeDropdown.Hide();
         if (uiPanel != null && !transform.IsChildOf(uiPanel.transform)) uiPanel.SetActive(false);
         if (player != null) player.ReleaseUI(this);
     }
@@ -115,6 +184,8 @@ public class RecipeMiniGameController : MonoBehaviour
 
     private void OnDisable()
     {
+        if (selectRecipeButton != null) selectRecipeButton.onClick.RemoveListener(StartSelectedRecipe);
+        if (recipeDropdown != null) recipeDropdown.onValueChanged.RemoveListener(PreviewSelection);
         if (retryButton != null) retryButton.onClick.RemoveListener(RetryCurrentRecipe);
         if (closeButton != null) closeButton.onClick.RemoveListener(CloseMiniGame);
         CloseMiniGame();

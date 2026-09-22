@@ -17,8 +17,11 @@ public class BakingRecipeData : RecipeData
     public float MixingDuration => mixingDuration;
 
     // Generated from the actual data so the recipe station cannot show a stale order.
+    public override IReadOnlyList<string> GetIngredientNames() => ingredients;
+
     public override string GetInstructions()
     {
+        if (!string.IsNullOrWhiteSpace(CustomInstructions)) return CustomInstructions;
         var text = new StringBuilder("Add these ingredients in order:\n");
         if (ingredients != null)
             for (int i = 0; i < ingredients.Length; i++)
