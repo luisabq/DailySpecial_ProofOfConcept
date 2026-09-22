@@ -15,7 +15,8 @@ MonoBehaviour:
   recipeName: Weird Bread
   miniGamePrefab: {fileID: 7567898759420168451, guid: 87408626b7731b747bd8658993b30b2f, type: 3}
   recipeInstructions: 
-  receiptProductName: 
+  finishedRecipeSprite: {fileID: 21300000, guid: 965ac8c846f2aac44b02d42bdf49d9f4, type: 3}
+  receiptProductName: Weird Bread
   managementExplanation: We started using these replacement ingredients today because
     our usual supplies did not arrive.
   supplyRecord: "Fish eggs and sawdust received three days ago. \nDelivery type:

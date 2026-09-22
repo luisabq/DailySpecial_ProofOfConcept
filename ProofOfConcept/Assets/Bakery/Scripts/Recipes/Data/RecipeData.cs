@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 // Shared recipe information. A recipe selects its own mini-game prefab.
@@ -12,6 +13,14 @@ public class RecipeData : ScriptableObject
     [TextArea(3, 10)]
     [Tooltip("Optional instructions displayed only at the recipe station.")]
     [SerializeField] private string recipeInstructions;
+
+    [Header("Recipe Book")]
+    [Tooltip("Used for both the left recipe button and the large right-page image.")]
+    [SerializeField] private Sprite finishedRecipeSprite;
+    public Sprite FinishedRecipeSprite => finishedRecipeSprite;
+    protected string CustomInstructions => recipeInstructions;
+
+    public virtual IReadOnlyList<string> GetIngredientNames() => new string[0];
 
     public virtual string GetInstructions()
     {

@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BakingRecipeData
   recipeName: Bread
   miniGamePrefab: {fileID: 7567898759420168451, guid: 87408626b7731b747bd8658993b30b2f, type: 3}
-  recipeInstructions: Instructions
-  receiptProductName: 
+  recipeInstructions: 
+  finishedRecipeSprite: {fileID: 21300000, guid: 7e329daa2ac9c3646bb9dddac8fbffba, type: 3}
+  receiptProductName: Bread
   managementExplanation: Use our usual bread recipe. The regular supplies arrived
     this morning.
   supplyRecord: Water, flour, and eggs received this morning under the regular supply
