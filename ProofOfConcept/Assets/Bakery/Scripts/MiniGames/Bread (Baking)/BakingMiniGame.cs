@@ -7,6 +7,10 @@ using UnityEngine.UI;
 // Attach to the ROOT of a UI prefab. The controller passes in the recipe at runtime.
 public class BakingMiniGame : RecipeMiniGame
 {
+    [Header("Inventory")]
+    [SerializeField] private bool requireShelfPickups = true;
+    private IngredientInventory pickupInventory;
+
     [Header("Ingredient Slots")]
     [SerializeField] private IngredientSlotBoard ingredientBoard;
     [SerializeField] private Button confirmIngredientsButton;
@@ -47,6 +51,9 @@ public class BakingMiniGame : RecipeMiniGame
         if (bakingRecipe == null)
             return Invalid("BakingMiniGame requires a Baking Recipe asset.", out error);
         if (!bakingRecipe.TryValidate(out error)) return false;
+        if (requireShelfPickups && (IngredientInventory.Instance == null ||
+            !IngredientInventory.Instance.isActiveAndEnabled))
+            return Invalid("Add one enabled IngredientInventory to the scene for shelf pickups.", out error);
 
         if (orderText == null || messageText == null || bakeButton == null ||
             removeButton == null || meterTrack == null || mixButton == null || mixingProgress == null ||
@@ -97,12 +104,18 @@ public class BakingMiniGame : RecipeMiniGame
 
         CreateMeter();
         stage = Stage.Ingredients;
-        ingredientBoard.Build(ingredients);
+        pickupInventory = requireShelfPickups ? IngredientInventory.Instance : null;
+        ingredientBoard.Build(ingredients, requireShelfPickups ? new Predicate<string>(pickupInventory.Has) : null);
         bakeProgress = 0f;
         PositionMarker();
         orderText.text = "Order: " + foodName;
         RefreshButtons();
-        messageText.text = "Drag ingredients into slots from left to right, then confirm.";
+        bool missing = false;
+        if (requireShelfPickups)
+            foreach (string ingredient in ingredients) if (!pickupInventory.Has(ingredient)) missing = true;
+        messageText.text = missing
+            ? "Some ingredients have not been collected. Close the oven, visit the shelves, then return."
+            : "Drag ingredients into slots from left to right, then confirm.";
     }
 
     private void Update()
@@ -134,6 +147,13 @@ public class BakingMiniGame : RecipeMiniGame
     private void ConfirmIngredients()
     {
         if (!IsRunning || stage != Stage.Ingredients || !ingredientBoard.IsComplete) return;
+        // Confirm spends the ingredients for this attempt, even when arranged incorrectly.
+        // Closing/switching before confirmation keeps pickups; after confirmation there is no refund.
+        if (requireShelfPickups && (pickupInventory == null || !pickupInventory.TryConsume(ingredients)))
+        {
+            messageText.text = "Ingredients are no longer available. Close the oven and collect them again.";
+            return;
+        }
         string[] selected = ingredientBoard.GetOrder();
         bool correct = selected.Length == ingredients.Length;
         for (int i = 0; correct && i < ingredients.Length; i++)
