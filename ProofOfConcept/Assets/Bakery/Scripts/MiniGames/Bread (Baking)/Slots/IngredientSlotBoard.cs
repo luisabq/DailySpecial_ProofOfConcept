@@ -69,7 +69,7 @@ public class IngredientSlotBoard : MonoBehaviour
         return true;
     }
 
-    public void Build(IReadOnlyList<string> ingredients)
+    public void Build(IReadOnlyList<string> ingredients, Predicate<string> isAvailable = null)
     {
         if (built) throw new InvalidOperationException("Create a fresh board for each attempt.");
         built = true;
@@ -79,7 +79,9 @@ public class IngredientSlotBoard : MonoBehaviour
             IngredientSlot slot = Instantiate(slotPrefab, slotsRoot, false);
             slot.Initialize(this, i);
             slots.Add(slot);
-            shuffled.Add(ingredients[i].Trim());
+            // Slots always exist; only collected ingredients get draggable tokens.
+            string name = ingredients[i].Trim();
+            if (isAvailable == null || isAvailable(name)) shuffled.Add(name);
         }
         // Shuffle independently of recipe order so the tray does not act as a checklist.
         for (int i = shuffled.Count - 1; i > 0; i--)
