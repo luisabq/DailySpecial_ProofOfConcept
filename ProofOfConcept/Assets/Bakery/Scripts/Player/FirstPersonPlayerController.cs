@@ -4,17 +4,22 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 #endif
 
-// Basic single-player WASD + mouse look. No jump, sprint, inventory, or interaction raycast.
+// Basic single-player WASD, mouse look and grounded Space jump.
+// Inventory and interaction remain separate components.
 [RequireComponent(typeof(CharacterController))]
 public class FirstPersonPlayerController : MonoBehaviour
 {
     [SerializeField] private Transform playerCamera;
     [Min(0f)][SerializeField] private float moveSpeed = 4f;
     [SerializeField] private float gravity = -20f;
+    [Min(0f)][SerializeField] private float jumpHeight = 1.2f;
+#if ENABLE_INPUT_SYSTEM
     [Tooltip("Degrees per mouse pixel for the new Input System.")]
     [SerializeField] private float mouseSensitivity = 0.12f;
+#else
     [Tooltip("Sensitivity for the legacy Mouse X/Y axes.")]
     [SerializeField] private float legacyMouseSensitivity = 2f;
+#endif
 
     private CharacterController controller;
     private float pitch;
@@ -82,11 +87,18 @@ public class FirstPersonPlayerController : MonoBehaviour
         playerCamera.localRotation = Quaternion.Euler(pitch, 0f, 0f);
 
         if (controller.isGrounded && verticalSpeed < 0f) verticalSpeed = -2f;
+        // Only a fresh Space press while grounded starts a jump.
+        // The UI/cursor/pause checks above also block jumping.
+        if (controller.isGrounded && JumpPressed() && jumpHeight > 0f && gravity < 0f)
+            verticalSpeed = Mathf.Sqrt(-2f * gravity * jumpHeight);
         verticalSpeed += gravity * Time.deltaTime;
         Vector3 velocity = (transform.right * move.x + transform.forward * move.y) * moveSpeed;
         velocity.y = verticalSpeed;
         // Move supplies collision handling; gravity is applied explicitly above.
-        controller.Move(velocity * Time.deltaTime);
+        CollisionFlags collisions = controller.Move(velocity * Time.deltaTime);
+        // Stop upward velocity on a ceiling instead of hanging against it.
+        if ((collisions & CollisionFlags.Above) != 0 && verticalSpeed > 0f)
+            verticalSpeed = 0f;
     }
 
     private Vector2 ReadMovement()
@@ -110,6 +122,15 @@ public class FirstPersonPlayerController : MonoBehaviour
         return Mouse.current == null ? Vector2.zero : Mouse.current.delta.ReadValue() * mouseSensitivity;
 #else
         return new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y")) * legacyMouseSensitivity;
+#endif
+    }
+
+    private static bool JumpPressed()
+    {
+#if ENABLE_INPUT_SYSTEM
+        return Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
+#else
+        return Input.GetKeyDown(KeyCode.Space);
 #endif
     }
 
